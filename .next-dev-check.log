@@ -1,0 +1,27 @@
+
+> company-profile-nyt@0.1.0 dev
+> node scripts/prepare-db.mjs && prisma generate && prisma db push --skip-generate && next dev --hostname 127.0.0.1 --port 3000
+
+Prisma schema loaded from prisma\schema.prisma
+
+✔ Generated Prisma Client (v6.19.3) to .\node_modules\@prisma\client in 46ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+The database is already in sync with the Prisma schema.
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 289ms
+Creating turbopack project { dir: 'D:\\CompanyProfile-NYT', testMode: true }
+
+ GET /nyt-admin 200 in 639ms (next.js: 139ms, application-code: 500ms)
+ GET / 200 in 648ms (next.js: 356ms, application-code: 291ms)
+[contact] Email notification skipped. Set RESEND_API_KEY and CONTACT_TO_EMAIL to enable it.
+ POST /api/contact 201 in 213ms (next.js: 52ms, application-code: 161ms)

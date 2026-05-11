@@ -1,0 +1,26 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model ContactLead {
+  id               String   @id @default(cuid())
+  name             String
+  company          String?
+  email            String
+  whatsapp         String?
+  service          String
+  message          String
+  status           String   @default("NEW")
+  notificationSent Boolean  @default(false)
+  clientEmailSentAt DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
