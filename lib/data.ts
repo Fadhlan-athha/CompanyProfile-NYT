@@ -34,6 +34,7 @@ export type Stat = {
 
 export type Service = {
   title: string;
+  slug: string;
   description: string;
   icon: LucideIcon;
 };
@@ -46,6 +47,7 @@ export type Reason = {
 
 export type PortfolioItem = {
   title: string;
+  slug: string;
   category: string;
   description: string;
   deliverables: string[];
@@ -59,11 +61,12 @@ export type ProcessStep = {
 };
 
 export const navLinks: NavLink[] = [
-  { label: "Tentang", href: "#about" },
-  { label: "Layanan", href: "#services" },
-  { label: "Solusi", href: "#solutions" },
-  { label: "Proses", href: "#process" },
-  { label: "Kontak", href: "#contact" }
+  { label: "Tentang", href: "/#about" },
+  { label: "Layanan", href: "/#services" },
+  { label: "Why Us", href: "/#why-us" },
+  { label: "Solusi", href: "/#solutions" },
+  { label: "Proses", href: "/#process" },
+  { label: "Kontak", href: "/#contact" }
 ];
 
 export const stats: Stat[] = [
@@ -92,36 +95,42 @@ export const stats: Stat[] = [
 export const services: Service[] = [
   {
     title: "Website Company Profile",
+    slug: "website-company-profile",
     description:
       "Membangun wajah digital perusahaan yang cepat, mudah dipahami, dan memperkuat kredibilitas bisnis.",
     icon: Building2
   },
   {
     title: "Website Toko Online",
+    slug: "website-toko-online",
     description:
       "Katalog produk, alur pemesanan, dan halaman penjualan yang rapi untuk membantu transaksi berjalan lebih tertata.",
     icon: ShoppingBag
   },
   {
     title: "Sistem Informasi Bisnis",
+    slug: "sistem-informasi-bisnis",
     description:
       "Dashboard, pencatatan, approval, dan laporan internal yang dibuat sesuai proses kerja perusahaan.",
     icon: LayoutDashboard
   },
   {
     title: "UI/UX Design",
+    slug: "ui-ux-design",
     description:
       "Desain antarmuka yang jelas, konsisten, dan nyaman digunakan oleh pelanggan maupun tim operasional.",
     icon: PenTool
   },
   {
     title: "Maintenance Website",
+    slug: "maintenance-website",
     description:
       "Perawatan konten, keamanan dasar, pengecekan performa, dan penyesuaian kecil agar website tetap stabil.",
     icon: Wrench
   },
   {
     title: "Konsultasi Digitalisasi Bisnis",
+    slug: "konsultasi-digitalisasi-bisnis",
     description:
       "Membantu memetakan kebutuhan, prioritas, dan solusi digital yang realistis untuk tahap bisnis Anda saat ini.",
     icon: MessageSquareText
@@ -158,6 +167,7 @@ export const reasons: Reason[] = [
 export const portfolio: PortfolioItem[] = [
   {
     title: "Corporate Presence System",
+    slug: "corporate-presence-system",
     category: "Company Profile",
     description:
       "Website profil perusahaan dengan struktur layanan, artikel, formulir prospek, dan analytics dasar.",
@@ -165,6 +175,7 @@ export const portfolio: PortfolioItem[] = [
   },
   {
     title: "Commerce Catalog Platform",
+    slug: "commerce-catalog-platform",
     category: "Toko Online",
     description:
       "Etalase produk yang membantu pelanggan memahami produk, mengirim pesanan, dan menghubungi sales lebih cepat.",
@@ -172,6 +183,7 @@ export const portfolio: PortfolioItem[] = [
   },
   {
     title: "Operational Dashboard",
+    slug: "operational-dashboard",
     category: "Sistem Bisnis",
     description:
       "Dashboard internal untuk mencatat pekerjaan, memantau status, dan membuat laporan operasional berkala.",
@@ -179,6 +191,7 @@ export const portfolio: PortfolioItem[] = [
   },
   {
     title: "Service Booking Portal",
+    slug: "service-booking-portal",
     category: "Digital Workflow",
     description:
       "Portal pemesanan layanan dengan formulir terstruktur, validasi data, dan notifikasi untuk tim terkait.",

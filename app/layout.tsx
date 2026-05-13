@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { Footer } from "@/components/sections/footer";
+import { Navbar } from "@/components/site/navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -48,8 +50,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="id">
-      <body>{children}</body>
+    <html lang="id" className="scroll-smooth">
+      <body className="antialiased">
+        <Navbar />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

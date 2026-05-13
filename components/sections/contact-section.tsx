@@ -5,22 +5,30 @@ import { useRef, useState, type FormEvent } from "react";
 import { AnimatedSection } from "@/components/ui/animated-section";
 import { Container } from "@/components/ui/container";
 import { SectionHeading } from "@/components/ui/section-heading";
+import {
+  buildCompanyConsultationWhatsAppUrl,
+  companyEmail,
+  companyWhatsAppLabel
+} from "@/lib/company-contact";
 import { contactServiceOptions, type ContactValidationError } from "@/lib/contact";
 
 const contactItems = [
   {
     label: "Email",
-    value: "hello@nextyoungtecnology.com",
+    value: companyEmail,
+    href: `mailto:${companyEmail}`,
     icon: Mail
   },
   {
-    label: "Telepon",
-    value: "+62 888-1023-038",
+    label: "WhatsApp",
+    value: companyWhatsAppLabel,
+    href: buildCompanyConsultationWhatsAppUrl(),
     icon: Phone
   },
   {
     label: "Area layanan",
     value: "Indonesia, remote dan onsite sesuai kebutuhan",
+    href: "#contact",
     icon: MapPin
   }
 ];
@@ -103,8 +111,11 @@ export function ContactSection() {
                 const Icon = item.icon;
 
                 return (
-                  <div
+                  <a
                     key={item.label}
+                    href={item.href}
+                    target={item.href.startsWith("http") ? "_blank" : undefined}
+                    rel={item.href.startsWith("http") ? "noreferrer" : undefined}
                     className="flex gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-line"
                   >
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-cyan-soft text-navy-950">
@@ -114,7 +125,7 @@ export function ContactSection() {
                       <p className="text-sm font-semibold text-ink-900">{item.label}</p>
                       <p className="mt-1 text-sm leading-6 text-ink-500">{item.value}</p>
                     </div>
-                  </div>
+                  </a>
                 );
               })}
             </div>
@@ -258,7 +269,7 @@ export function ContactSection() {
                   ) : null}
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label htmlFor="service" className="text-sm font-semibold text-ink-900">
                     Kebutuhan
                   </label>
