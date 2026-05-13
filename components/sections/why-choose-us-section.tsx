@@ -6,6 +6,7 @@ import { reasons } from "@/lib/data";
 export function WhyChooseUsSection() {
   return (
     <section
+      id="why-us"
       className="relative overflow-hidden bg-navy-950 py-20 sm:py-24"
       aria-labelledby="why-title"
     >

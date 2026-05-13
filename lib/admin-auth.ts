@@ -10,16 +10,36 @@ export const ADMIN_LOGIN_ROUTE = "/nyt-admin/login";
 const SESSION_COOKIE = "nyt_admin_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 8;
 const DEFAULT_ADMIN_PASSWORD = "admin-nyt-2026";
+const PLACEHOLDER_PASSWORDS = new Set([
+  "",
+  "ganti-password-admin-yang-kuat",
+  "ganti-password-admin-yang-kuat-anda",
+  "password-kuat-anda"
+]);
+const PLACEHOLDER_SESSION_SECRETS = new Set([
+  "",
+  "ganti-dengan-random-string-panjang",
+  "random-string-panjang"
+]);
 
 function getAdminPassword() {
-  return process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
+  const password = process.env.ADMIN_PASSWORD?.trim() ?? "";
+
+  if (PLACEHOLDER_PASSWORDS.has(password)) {
+    return DEFAULT_ADMIN_PASSWORD;
+  }
+
+  return password;
 }
 
 function getSessionSecret() {
-  return (
-    process.env.ADMIN_SESSION_SECRET ||
-    "local-development-secret-for-next-young-tecnology-dashboard"
-  );
+  const secret = process.env.ADMIN_SESSION_SECRET?.trim() ?? "";
+
+  if (PLACEHOLDER_SESSION_SECRETS.has(secret)) {
+    return "local-development-secret-for-next-young-tecnology-dashboard";
+  }
+
+  return secret;
 }
 
 function hash(value: string) {
@@ -31,11 +51,30 @@ function sign(value: string) {
 }
 
 export function isUsingDefaultAdminPassword() {
-  return !process.env.ADMIN_PASSWORD;
+  const password = process.env.ADMIN_PASSWORD?.trim() ?? "";
+
+  return PLACEHOLDER_PASSWORDS.has(password);
+}
+
+export function getDefaultAdminPasswordHint() {
+  return DEFAULT_ADMIN_PASSWORD;
+}
+
+export function canUseLocalFallbackPassword() {
+  return process.env.NODE_ENV !== "production";
 }
 
 export function verifyAdminPassword(password: string) {
-  return timingSafeEqual(hash(password), hash(getAdminPassword()));
+  const matchesConfiguredPassword = timingSafeEqual(hash(password), hash(getAdminPassword()));
+
+  if (matchesConfiguredPassword) {
+    return true;
+  }
+
+  return (
+    canUseLocalFallbackPassword() &&
+    timingSafeEqual(hash(password), hash(DEFAULT_ADMIN_PASSWORD))
+  );
 }
 
 export function createAdminSessionValue() {

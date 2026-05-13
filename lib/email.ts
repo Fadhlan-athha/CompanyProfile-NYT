@@ -1,14 +1,67 @@
 import { Resend } from "resend";
 import type { ContactLead } from "@prisma/client";
 
+type EmailFailure = {
+  sent: false;
+  reason: "not_configured" | "test_sender_limit" | "domain_not_verified" | "failed";
+  message?: string;
+};
+
 type EmailResult =
   | {
       sent: true;
     }
-  | {
-      sent: false;
-      reason: "not_configured" | "failed";
-    };
+  | EmailFailure;
+
+function getFromEmail() {
+  const configuredFrom = process.env.CONTACT_FROM_EMAIL?.trim();
+
+  if (!configuredFrom || configuredFrom.includes("domain-anda.com")) {
+    return "Next Young Tecnology <onboarding@resend.dev>";
+  }
+
+  return configuredFrom;
+}
+
+function getResendErrorMessage(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return "Provider email menolak permintaan.";
+  }
+
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+
+  if ("error" in error && typeof error.error === "string") {
+    return error.error;
+  }
+
+  return "Provider email menolak permintaan.";
+}
+
+function classifyResendError(error: unknown): EmailFailure {
+  const message = getResendErrorMessage(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("own email address") ||
+    normalized.includes("testing emails") ||
+    normalized.includes("test email")
+  ) {
+    return { sent: false, reason: "test_sender_limit", message };
+  }
+
+  if (
+    normalized.includes("domain") &&
+    (normalized.includes("verify") ||
+      normalized.includes("verified") ||
+      normalized.includes("not found"))
+  ) {
+    return { sent: false, reason: "domain_not_verified", message };
+  }
+
+  return { sent: false, reason: "failed", message };
+}
 
 function escapeHtml(value: string) {
   return value
@@ -22,8 +75,7 @@ function escapeHtml(value: string) {
 export async function sendLeadNotification(lead: ContactLead): Promise<EmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_TO_EMAIL;
-  const from =
-    process.env.CONTACT_FROM_EMAIL || "Next Young Tecnology <onboarding@resend.dev>";
+  const from = getFromEmail();
 
   if (!apiKey || !to) {
     console.info(
@@ -36,7 +88,7 @@ export async function sendLeadNotification(lead: ContactLead): Promise<EmailResu
   const company = lead.company || "-";
 
   try {
-    await resend.emails.send({
+    const response = await resend.emails.send({
       from,
       to,
       replyTo: lead.email,
@@ -70,17 +122,22 @@ export async function sendLeadNotification(lead: ContactLead): Promise<EmailResu
       `
     });
 
+    if (response.error) {
+      const result = classifyResendError(response.error);
+      console.error("[contact] Lead notification rejected by provider", result.message);
+      return result;
+    }
+
     return { sent: true };
   } catch (error) {
     console.error("[contact] Failed to send lead notification", error);
-    return { sent: false, reason: "failed" };
+    return classifyResendError(error);
   }
 }
 
 export async function sendClientFollowUpEmail(lead: ContactLead): Promise<EmailResult> {
   const apiKey = process.env.RESEND_API_KEY;
-  const from =
-    process.env.CONTACT_FROM_EMAIL || "Next Young Tecnology <onboarding@resend.dev>";
+  const from = getFromEmail();
   const replyTo = process.env.CONTACT_TO_EMAIL;
 
   if (!apiKey) {
@@ -91,7 +148,7 @@ export async function sendClientFollowUpEmail(lead: ContactLead): Promise<EmailR
   const resend = new Resend(apiKey);
 
   try {
-    await resend.emails.send({
+    const response = await resend.emails.send({
       from,
       to: lead.email,
       replyTo,
@@ -118,9 +175,15 @@ export async function sendClientFollowUpEmail(lead: ContactLead): Promise<EmailR
       `
     });
 
+    if (response.error) {
+      const result = classifyResendError(response.error);
+      console.error("[admin] Client follow-up rejected by provider", result.message);
+      return result;
+    }
+
     return { sent: true };
   } catch (error) {
     console.error("[admin] Failed to send client follow-up email", error);
-    return { sent: false, reason: "failed" };
+    return classifyResendError(error);
   }
 }

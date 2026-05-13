@@ -34,6 +34,25 @@ function formatDate(date: Date) {
   }).format(date);
 }
 
+function buildClientEmailUrl(lead: {
+  email: string;
+  name: string;
+  service: string;
+}) {
+  const subject = `Follow up konsultasi ${lead.service}`;
+  const body = [
+    `Halo ${lead.name},`,
+    "",
+    "Terima kasih sudah mengirim permintaan konsultasi ke Next Young Tech.",
+    `Kami ingin menindaklanjuti kebutuhan Anda terkait ${lead.service}.`,
+    "",
+    "Salam,",
+    "Next Young Tech"
+  ].join("\n");
+
+  return `mailto:${lead.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+
 type AdminDashboardPageProps = {
   searchParams?: Promise<{
     email?: string;
@@ -61,6 +80,22 @@ function getEmailFeedback(status?: string) {
       className: "border-red-200 bg-red-50 text-red-900",
       message:
         "Email belum terkirim. Periksa konfigurasi Resend, domain pengirim, dan alamat email client."
+    };
+  }
+
+  if (status === "test_sender_limit") {
+    return {
+      className: "border-amber-200 bg-amber-50 text-amber-900",
+      message:
+        "Email belum terkirim karena sender Resend masih mode testing. Verifikasi domain pengirim di Resend agar bisa kirim ke email client mana pun."
+    };
+  }
+
+  if (status === "domain_not_verified") {
+    return {
+      className: "border-amber-200 bg-amber-50 text-amber-900",
+      message:
+        "Email belum terkirim karena domain CONTACT_FROM_EMAIL belum terverifikasi di Resend. Gunakan domain yang sudah verified."
     };
   }
 
@@ -94,12 +129,12 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
   return (
     <main className="min-h-screen bg-cloud text-ink-900">
       <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-5 py-6 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-6 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-navy-800">
               Hidden admin route
             </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-normal text-ink-900">
+            <h1 className="mt-2 text-2xl font-semibold tracking-normal text-ink-900 sm:text-3xl">
               Dashboard Lead
             </h1>
           </div>
@@ -116,7 +151,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         </div>
       </header>
 
-      <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
         {isUsingDefaultAdminPassword() ? (
           <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
             WELCOME SUPER-ADMIN
@@ -124,7 +159,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
         ) : null}
 
         {emailFeedback ? (
-          <div className={`mb-6 rounded-md border p-4 text-sm leading-6 ${emailFeedback.className}`}>
+          <div
+            className={`mb-6 rounded-md border p-4 text-sm leading-6 ${emailFeedback.className}`}
+          >
             {emailFeedback.message}
           </div>
         ) : null}
@@ -176,8 +213,143 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
               </div>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[980px] border-collapse text-left">
+            <>
+              <div className="grid gap-4 p-4 xl:hidden">
+                {leads.map((lead) => {
+                  const status = getLeadStatusMeta(lead.status);
+                  const emailUrl = buildClientEmailUrl(lead);
+                  const whatsappUrl = buildClientWhatsAppUrl({
+                    name: lead.name,
+                    whatsapp: lead.whatsapp,
+                    service: lead.service
+                  });
+
+                  return (
+                    <article
+                      key={lead.id}
+                      className="rounded-md border border-slate-200 bg-white p-4 shadow-line"
+                    >
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0">
+                          <p className="text-base font-semibold text-ink-900">{lead.name}</p>
+                          <p className="mt-1 text-sm text-ink-500">
+                            {lead.company || "Tanpa nama perusahaan"}
+                          </p>
+                        </div>
+                        <span
+                          className={`w-fit rounded-md border px-3 py-1.5 text-xs font-bold ${status.badgeClass}`}
+                        >
+                          {status.label}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                        <div>
+                          <p className="font-semibold text-ink-500">Email</p>
+                          <p className="mt-1 break-words font-semibold text-navy-800">
+                            {lead.email}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="font-semibold text-ink-500">WhatsApp</p>
+                          <p className="mt-1 font-semibold text-ink-700">
+                            {formatWhatsAppLabel(lead.whatsapp)}
+                          </p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <p className="font-semibold text-ink-500">Kebutuhan</p>
+                          <p className="mt-1 font-semibold leading-6 text-ink-900">
+                            {lead.service}
+                          </p>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <p className="font-semibold text-ink-500">Pesan</p>
+                          <p className="mt-1 whitespace-pre-line leading-6 text-ink-500">
+                            {lead.message}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 grid gap-2 text-xs text-ink-500 sm:grid-cols-2">
+                        <p>Dibuat: {formatDate(lead.createdAt)}</p>
+                        <p>
+                          Email client:{" "}
+                          {lead.clientEmailSentAt
+                            ? formatDate(lead.clientEmailSentAt)
+                            : "belum dikirim"}
+                        </p>
+                      </div>
+
+                      <div className="mt-4 grid gap-3">
+                        <form action={updateLeadStatusAction} className="grid gap-2 sm:flex">
+                          <input type="hidden" name="id" value={lead.id} />
+                          <label htmlFor={`mobile-status-${lead.id}`} className="sr-only">
+                            Ubah status lead {lead.name}
+                          </label>
+                          <select
+                            id={`mobile-status-${lead.id}`}
+                            name="status"
+                            defaultValue={lead.status}
+                            className="focus-ring min-h-11 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-ink-900 sm:flex-1"
+                          >
+                            {leadStatuses.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            type="submit"
+                            className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-navy-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-navy-800"
+                          >
+                            Simpan Status
+                            <Save className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        </form>
+
+                        <div className="grid gap-2 sm:grid-cols-3">
+                          <form action={sendClientEmailAction}>
+                            <input type="hidden" name="id" value={lead.id} />
+                            <button
+                              type="submit"
+                              className="focus-ring inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-ink-700 transition hover:border-navy-950 hover:text-navy-950"
+                            >
+                              Kirim Email
+                              <Mail className="h-4 w-4" aria-hidden="true" />
+                            </button>
+                          </form>
+                          <a
+                            href={emailUrl}
+                            className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-ink-700 transition hover:border-navy-950 hover:text-navy-950"
+                          >
+                            Buka Email
+                            <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                          </a>
+                          {whatsappUrl ? (
+                            <a
+                              href={whatsappUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="focus-ring inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-navy-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-navy-800"
+                            >
+                              WA Client
+                              <MessageCircle className="h-4 w-4" aria-hidden="true" />
+                            </a>
+                          ) : (
+                            <span className="inline-flex min-h-11 cursor-not-allowed items-center justify-center gap-2 rounded-md bg-slate-200 px-3 py-2 text-sm font-semibold text-slate-500">
+                              WA kosong
+                              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="hidden overflow-x-auto xl:block">
+                <table className="w-full min-w-[1040px] border-collapse text-left">
                 <thead className="bg-cloud text-xs uppercase tracking-[0.12em] text-ink-500">
                   <tr>
                     <th className="px-5 py-4 font-semibold">Lead</th>
@@ -190,6 +362,7 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                 <tbody className="divide-y divide-slate-200">
                   {leads.map((lead) => {
                     const status = getLeadStatusMeta(lead.status);
+                    const emailUrl = buildClientEmailUrl(lead);
                     const whatsappUrl = buildClientWhatsAppUrl({
                       name: lead.name,
                       whatsapp: lead.whatsapp,
@@ -278,6 +451,13 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                                 <Mail className="h-4 w-4" aria-hidden="true" />
                               </button>
                             </form>
+                            <a
+                              href={emailUrl}
+                              className="focus-ring inline-flex items-center justify-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-ink-700 transition hover:border-navy-950 hover:text-navy-950"
+                            >
+                              Buka Email
+                              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+                            </a>
                             {whatsappUrl ? (
                               <a
                                 href={whatsappUrl}
@@ -300,8 +480,9 @@ export default async function AdminDashboardPage({ searchParams }: AdminDashboar
                     );
                   })}
                 </tbody>
-              </table>
-            </div>
+                </table>
+              </div>
+            </>
           )}
         </section>
       </div>
